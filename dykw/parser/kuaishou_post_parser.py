@@ -35,6 +35,8 @@ def _extract_location_coordinates(feed: Dict[str, Any]) -> tuple[str, str]:
 
 
 def _media_type(photo: Dict[str, Any]) -> str:
+    if photo.get("manifest") or photo.get("manifestH265") or photo.get("photoUrls") or photo.get("photoH265Urls"):
+        return "video"
     if str(photo.get("photoUrl") or "").strip():
         return "video"
     cover_urls = photo.get("coverUrls") or []
@@ -45,13 +47,21 @@ def _media_type(photo: Dict[str, Any]) -> str:
     return "unknown"
 
 
+def _normalize_timestamp(value: Any) -> Any:
+    if not isinstance(value, int):
+        return None
+    if value > 10_000_000_000:
+        return value // 1000
+    return value
+
+
 def parse_kuaishou_feed(feed: Dict[str, Any], keyword: str) -> ParsedPost:
     photo = feed.get("photo") or {}
     author = feed.get("author") or {}
 
     photo_id = str(photo.get("id") or "")
     caption = str(photo.get("caption") or photo.get("originCaption") or "")
-    publish_time = ts_to_local_datetime_str(photo.get("timestamp") if isinstance(photo.get("timestamp"), int) else None)
+    publish_time = ts_to_local_datetime_str(_normalize_timestamp(photo.get("timestamp")))
     post_url = f"https://www.kuaishou.com/short-video/{photo_id}" if photo_id else ""
     poi_name, poi_address = _extract_poi_fields(feed)
     location_lng, location_lat = _extract_location_coordinates(feed)

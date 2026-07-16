@@ -142,9 +142,10 @@ python main.py ^
   --max-items 30 ^
   --min-sleep 5 ^
   --max-sleep 12
+  --state-db data/state-try.sqlite3
 ```
 
-跑关键词文件：
+跑关键词文件（douyin+默认chorme）：
 
 ```bat
 python main.py ^
@@ -158,6 +159,7 @@ python main.py ^
   --max-items 300 ^
   --min-sleep 5 ^
   --max-sleep 12
+  --state-db data/state.sqlite3
 ```
 
 快手 + Edge：
@@ -168,20 +170,27 @@ python main.py ^
   --browser-channel msedge ^
   --keywords-file keywords.txt ^
   --locations "深圳" ^
-  --start-date 2025-04-01 ^
-  --end-date 2025-09-30 ^
-  --out-format xlsx
+  --start-date 2018-04-01 ^
+  --end-date 2026-06-30 ^
+  --out-format both ^
+  --max-pages 30 ^
+  --max-items 300 ^
+  --min-sleep 5 ^
+  --max-sleep 12
+  --state-db data/state-kuaishou.sqlite3
 ```
+
+注意：需要启动对应的浏览器
 
 单条抖音 URL 排查：
 
 ```bat
 python main.py ^
   --platform douyin ^
-  --keywords "https://www.douyin.com/search/武汉看海Ciao?modal_id=7652861012236408767&type=video" ^
+  --keywords "此处放入单条视频链接" ^
   --location-mode none ^
   --start-date 2000-01-01 ^
-  --out output\debug-location.csv ^
+  --out output\debug.csv ^
   --max-pages 1 ^
   --max-items 5 ^
   --no-resume
