@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments and local secrets
+.env
+.venv/
+venv/
+
+# other
+data/
+keywords copy.txt
+output/
+

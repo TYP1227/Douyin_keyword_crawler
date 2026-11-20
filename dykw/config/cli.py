@@ -129,7 +129,13 @@ def _load_keywords(args: argparse.Namespace) -> List[str]:
         fp = Path(keywords_file)
         if not fp.exists():
             raise SystemExit(f"关键词文件不存在：{keywords_file}")
-        keywords.extend([line.strip() for line in fp.read_text(encoding="utf-8").splitlines() if line.strip()])
+        keywords.extend(
+            [
+                line.strip()
+                for line in fp.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+        )
 
     dedup_keywords: List[str] = []
     seen = set()

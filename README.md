@@ -141,7 +141,7 @@ python main.py ^
   --max-pages 2 ^
   --max-items 30 ^
   --min-sleep 5 ^
-  --max-sleep 12
+  --max-sleep 12 ^
   --state-db data/state-try.sqlite3
 ```
 
@@ -150,15 +150,15 @@ python main.py ^
 ```bat
 python main.py ^
   --platform douyin ^
-  --keywords-file keywords.txt ^
-  --locations "广州" ^
-  --start-date 2018-01-01 ^
-  --end-date 2026-06-30 ^
-  --out-format both ^
+  --keywords-file "keywords copy.txt" ^
+  --locations "东莞" ^
+  --start-date 2017-01-01 ^
+  --end-date 2026-09-30 ^
+  --out-format csv ^
   --max-pages 30 ^
-  --max-items 300 ^
+  --max-items 200 ^
   --min-sleep 5 ^
-  --max-sleep 12
+  --max-sleep 12 ^
   --state-db data/state.sqlite3
 ```
 
@@ -168,7 +168,7 @@ python main.py ^
 python main.py ^
   --platform kuaishou ^
   --browser-channel msedge ^
-  --keywords-file keywords.txt ^
+  --keywords-file "keywords copy.txt" ^
   --locations "深圳" ^
   --start-date 2018-04-01 ^
   --end-date 2026-06-30 ^
@@ -176,7 +176,7 @@ python main.py ^
   --max-pages 30 ^
   --max-items 300 ^
   --min-sleep 5 ^
-  --max-sleep 12
+  --max-sleep 12 ^
   --state-db data/state-kuaishou.sqlite3
 ```
 
