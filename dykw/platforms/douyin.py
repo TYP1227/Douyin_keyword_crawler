@@ -18,6 +18,9 @@ from dykw.utils.logging_util import get_logger
 
 logger = get_logger()
 
+TRANSIENT_NAVIGATION_STATUSES = {500, 502, 503, 504}
+NAVIGATION_ATTEMPTS = 2
+
 
 class DouyinBrowserClient(BrowserSearchClient):
     platform = "douyin"
@@ -103,22 +106,69 @@ class DouyinBrowserClient(BrowserSearchClient):
         try:
             url = self._normalize_entry_url(keyword)
             report(page=0, status="打开页面")
-            await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
-            report(page=0, status="等待响应")
-            await self.guard.sleep()
-            empty_pages = 0
-            for page_no in range(1, self.max_pages + 1):
-                if stop_reason or len(unique_items(items, "aweme_id")) >= max_items:
+            for attempt in range(1, NAVIGATION_ATTEMPTS + 1):
+                response = await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                if response is None:
+                    stop_reason = "搜索页未返回导航响应"
+                    logger.warning("抖音搜索页未返回导航响应：keyword=%s", keyword)
                     break
-                before = len(unique_items(items, "aweme_id"))
-                await self.page.mouse.wheel(0, self.guard.scroll_delta())
-                report(page=page_no, status="滚动加载")
+
+                status = int(response.status)
+                response_url = str(response.url or url)
+                try:
+                    page_text = await self.page.evaluate(
+                        "() => `${document.title || ''}\n${document.body?.innerText || ''}`.slice(0, 4000)"
+                    )
+                except Exception as exc:
+                    logger.debug(
+                        "读取抖音搜索页可见文本失败：url=%s err=%s",
+                        response_url.split("?", 1)[0],
+                        type(exc).__name__,
+                    )
+                    page_text = ""
+
+                try:
+                    self.guard.record_response(url=response_url, status=status, text=str(page_text or ""))
+                except RiskStopped as exc:
+                    stop_reason = str(exc)
+                    report(page=0, status="需要人工验证")
+                    break
+
+                if status < 400:
+                    break
+                if status in TRANSIENT_NAVIGATION_STATUSES and attempt < NAVIGATION_ATTEMPTS:
+                    logger.warning(
+                        "抖音搜索页响应异常，等待后重试：status=%s attempt=%s/%s keyword=%s",
+                        status,
+                        attempt,
+                        NAVIGATION_ATTEMPTS,
+                        keyword,
+                    )
+                    report(page=0, status=f"页面异常 {status}，等待重试")
+                    await self.guard.sleep()
+                    continue
+
+                stop_reason = f"搜索页响应异常：status={status}"
+                logger.warning("抖音搜索页响应异常，停止当前关键词：status=%s keyword=%s", status, keyword)
+                report(page=0, status=f"页面异常 {status}")
+                break
+
+            if not stop_reason:
+                report(page=0, status="等待响应")
                 await self.guard.sleep()
-                after = len(unique_items(items, "aweme_id"))
-                report(page=page_no)
-                empty_pages = empty_pages + 1 if after <= before else 0
-                if empty_pages >= self.max_empty_pages:
-                    break
+                empty_pages = 0
+                for page_no in range(1, self.max_pages + 1):
+                    if stop_reason or len(unique_items(items, "aweme_id")) >= max_items:
+                        break
+                    before = len(unique_items(items, "aweme_id"))
+                    await self.page.mouse.wheel(0, self.guard.scroll_delta())
+                    report(page=page_no, status="滚动加载")
+                    await self.guard.sleep()
+                    after = len(unique_items(items, "aweme_id"))
+                    report(page=page_no)
+                    empty_pages = empty_pages + 1 if after <= before else 0
+                    if empty_pages >= self.max_empty_pages:
+                        break
         finally:
             remove = getattr(self.page, "remove_listener", None)
             if remove:

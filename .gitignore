@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
+.*
 
 # Virtual environments and local secrets
 .env
@@ -12,4 +13,5 @@ venv/
 data/
 keywords copy.txt
 output/
+docs/
 
